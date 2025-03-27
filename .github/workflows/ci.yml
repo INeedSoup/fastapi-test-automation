@@ -1,10 +1,11 @@
-name: CI Pipeline
+name: API Tests
 
 on: [push, pull_request]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -16,12 +17,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install fastapi uvicorn pytest requests sqlalchemy psycopg2-binary
+          pip install fastapi uvicorn requests pytest
 
-      - name: Run FastAPI Server
+      - name: Start FastAPI server
         run: |
-          uvicorn apiserver:app --host 0.0.0.0 --port 8000 &
-          sleep 5
+          nohup uvicorn apiserver:app --host 0.0.0.0 --port 8000 --reload &
+        env:
+          PYTHONUNBUFFERED: 1
+
+      - name: Wait for server to be ready
+        run: sleep 10  # Increase wait time if needed
 
       - name: Run tests
         run: pytest testAutomation.py
