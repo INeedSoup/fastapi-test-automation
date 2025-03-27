@@ -1,15 +1,32 @@
+# testAutomation.py
 import requests
 
 testcases = [
-    ("http://localhost:8000/add/2/2", 4, "Test addition of 2 and 2"),
+    {
+        "url": "http://localhost:8000/add/2/2",
+        "expected": 4,
+        "description": "Test addition of 2 and 2"
+    },
+    {
+        "url": "http://localhost:8000/subtract/2/2",
+        "expected": 0,
+        "description": "Test subtraction of 2 from 2"
+    },
+    {
+        "url": "http://localhost:8000/multiply/2/2",
+        "expected": 4,
+        "description": "Test multiplication of 2 and 2"
+    }
 ]
 
-def test_api():
-    for url, expected, description in testcases:
-        response = requests.get(url)
+def test():
+    for case in testcases:
+        response = requests.get(case["url"])
         result = response.json()["result"]
-        assert result == expected, f"{description}. Expected {expected}, got {result}"
-        print(f"✅ {description} passed.")
+        assert result == case["expected"], f"Test failed: {case['description']}. Expected {case['expected']}, got {result}"
+        print(f"Test passed: {case['description']}")
+    print("All tests passed!")
 
 if __name__ == "__main__":
-    test_api()
+    test()
+
