@@ -1,10 +1,32 @@
+# .github/workflows/ci.yml
 name: API Tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 1102
+          POSTGRES_DB: fastapi_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
 
     steps:
       - name: Checkout code
@@ -17,16 +39,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install fastapi uvicorn requests pytest
+          pip install fastapi uvicorn pytest requests sqlalchemy psycopg2-binary
 
       - name: Start FastAPI server
         run: |
           nohup uvicorn apiserver:app --host 0.0.0.0 --port 8000 --reload &
-        env:
-          PYTHONUNBUFFERED: 1
+          sleep 10  # Wait for the server and DB to be ready
 
-      - name: Wait for server to be ready
-        run: sleep 10  # Increase wait time if needed
+      - name: Run tests (Requests-based)
+        run: python testAutomation.py
 
-      - name: Run tests
-        run: pytest testAutomation.py
+      - name: Run tests (Pytest)
+        run: pytest test_api.py
